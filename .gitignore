@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# training artifacts (keep the scaffold, not the weights)
+train/samples/
+
+# dev/debug scripts & notes (not part of the deliverable)
+_*.py
+_*.txt
+HANDOVER.md

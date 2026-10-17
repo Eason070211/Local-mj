@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麻将 · Mahjong LAN</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ start screen (solo / LAN multi) ============ -->
+  <div id="start-screen" class="screen">
+    <div class="start-inner">
+      <div class="start-title">麻<span class="gold">将</span></div>
+      <div class="start-sub">Mahjong · 局域网四人联机 / 单机陪打</div>
+
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="tab-solo">单机练习</button>
+        <button class="mode-tab" id="tab-multi">联机对战</button>
+      </div>
+
+      <!-- solo panel -->
+      <div id="panel-solo">
+        <div class="start-card">
+          <div class="card-label">规则</div>
+          <div class="rule-cards" id="rule-cards">
+            <button class="rule-card active" data-rules="classic">
+              <div class="rc-name">经典推倒胡</div>
+              <div class="rc-desc">136 张 · 可吃碰杠 · 一炮多响</div>
+            </button>
+            <button class="rule-card" data-rules="sichuan">
+              <div class="rc-name">四川血战</div>
+              <div class="rc-desc">108 张 · 缺一门 · 刮风下雨 · 查大叫</div>
+            </button>
+            <button class="rule-card" data-rules="guangdong">
+              <div class="rc-name">广东鸡平胡</div>
+              <div class="rc-desc">136 张 · 可吃碰杠 · 可买马</div>
+            </button>
+          </div>
+
+          <div class="card-label">电脑强度</div>
+          <div class="diff-row" id="diff-row">
+            <button class="diff-btn active" data-diff="easy">易</button>
+            <button class="diff-btn" data-diff="medium">中</button>
+            <button class="diff-btn" data-diff="hard">难 · 蒙特卡洛</button>
+          </div>
+
+          <div class="card-label" id="ma-label" style="display:none">买马数量（庄家买马）</div>
+          <div class="ma-row" id="ma-row" style="display:none">
+            <button class="ma-btn active" data-ma="0">0</button>
+            <button class="ma-btn" data-ma="1">1</button>
+            <button class="ma-btn" data-ma="2">2</button>
+            <button class="ma-btn" data-ma="3">3</button>
+            <button class="ma-btn" data-ma="4">4</button>
+          </div>
+
+          <div class="opt-row">
+            <label class="switch"><input type="checkbox" id="opt-sound" checked><span>音效</span></label>
+            <label class="switch"><input type="checkbox" id="opt-autopass" checked><span>自动过牌(10秒)</span></label>
+            <label class="switch"><input type="checkbox" id="opt-tip" checked><span>听牌提示</span></label>
+            <label class="switch"><input type="checkbox" id="opt-perf"><span>流畅模式</span></label>
+            <label class="switch"><span>出牌间隔</span>
+              <select id="opt-delay">
+                <option value="0">关</option>
+                <option value="150">0.15s</option>
+                <option value="300" selected>0.3s</option>
+                <option value="500">0.5s</option>
+              </select>
+            </label>
+          </div>
+
+          <button class="btn-start" id="btn-start">开始游戏</button>
+          <button class="btn-ghost" id="btn-help-start">玩法说明</button>
+        </div>
+      </div>
+
+      <!-- LAN multi panel -->
+      <div id="panel-multi" class="hidden">
+        <div class="start-card">
+          <div class="card-label">创建房间（你当房主）</div>
+          <input class="txt" id="m-name" placeholder="你的昵称（必填）" maxlength="12">
+          <div class="mini-row">
+            <select id="m-rules" class="sel">
+              <option value="classic">经典推倒胡</option>
+              <option value="sichuan">四川血战</option>
+              <option value="guangdong">广东鸡平胡</option>
+            </select>
+            <select id="m-diff" class="sel" title="空位 AI 的强度">
+              <option value="easy">AI 易</option>
+              <option value="medium" selected>AI 中</option>
+              <option value="hard">AI 难</option>
+            </select>
+            <select id="m-ma" class="sel">
+              <option value="0">买马 0</option>
+              <option value="1">买马 1</option>
+              <option value="2">买马 2</option>
+              <option value="3">买马 3</option>
+              <option value="4">买马 4</option>
+            </select>
+          </div>
+          <button class="btn-start" id="btn-create-room">创建房间</button>
+
+          <div class="divider">或加入已有房间</div>
+          <div class="mini-row">
+            <input class="txt code" id="join-code" placeholder="房间码" maxlength="4">
+            <input class="txt" id="join-name" placeholder="你的昵称" maxlength="12">
+          </div>
+          <button class="btn-start alt" id="btn-join-room">加入房间</button>
+          <div class="hint" id="lan-hint"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ room lobby ============ -->
+  <div id="room-screen" class="screen hidden">
+    <div class="room-inner">
+      <div class="room-title">房间 <span id="room-code" class="gold"></span></div>
+      <div class="room-meta" id="room-meta"></div>
+      <div class="seat-list" id="seat-list"></div>
+      <div class="room-actions">
+        <button class="btn-start" id="btn-room-start" style="display:none">开始游戏（空位 AI 补位）</button>
+        <div id="room-waiting" style="display:none" class="waiting">等待房主开始…</div>
+        <div id="room-auto" class="waiting" style="display:none">凑满 4 人自动开局…</div>
+      </div>
+      <div class="room-share" id="room-share"></div>
+      <button class="btn-ghost" id="btn-room-leave">退出房间</button>
+    </div>
+  </div>
+
+  <!-- ============ game screen ============ -->
+  <div id="game-screen" class="screen hidden">
+    <canvas id="table"></canvas>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-left">
+        <div id="round-info">第 1 局</div>
+        <div id="wall-info">余 83</div>
+        <div id="dealer-info">庄 东</div>
+        <div id="turn-info"></div>
+      </div>
+      <div class="hud-right">
+        <button class="hud-btn" id="btn-stats" title="战绩统计">📊</button>
+        <button class="hud-btn" id="btn-perf" title="流畅模式">⚡</button>
+        <button class="hud-btn" id="btn-sound">♪</button>
+        <button class="hud-btn" id="btn-help">?</button>
+        <button class="hud-btn" id="btn-settings">⚙</button>
+        <button class="hud-btn" id="btn-quit">退出</button>
+      </div>
+      <div class="scoreboard" id="scoreboard"></div>
+    </div>
+
+    <!-- turn / tenpai banner -->
+    <div id="banner" class="hidden"></div>
+
+    <!-- action bar -->
+    <div id="action-bar" class="hidden">
+      <div id="claim-warn" class="claim-warn hidden"></div>
+      <div class="act-row">
+        <button class="act-btn" id="act-hu" style="display:none">胡</button>
+        <button class="act-btn" id="act-peng" style="display:none">碰</button>
+        <button class="act-btn" id="act-gang" style="display:none">杠</button>
+        <button class="act-btn" id="act-chi" style="display:none">吃</button>
+        <button class="act-btn act-pass" id="act-pass" style="display:none">过</button>
+        <button class="act-btn act-next" id="act-next" style="display:none">下一局</button>
+      </div>
+    </div>
+
+    <!-- sichuan absence -->
+    <div id="absence-bar" class="hidden">
+      <span class="abs-title">定缺：选择你要缺的花色（缺门牌不能打出）</span>
+      <button class="abs-btn" data-suit="man">万</button>
+      <button class="abs-btn" data-suit="pin">筒</button>
+      <button class="abs-btn" data-suit="sou">条</button>
+    </div>
+
+    <!-- overlays -->
+    <div id="win-overlay" class="overlay hidden"></div>
+    <div id="modal" class="overlay hidden"></div>
+  </div>
+</div>
+
+<script src="/static/js/tiles.js"></script>
+<script src="/static/js/net.js"></script>
+<script src="/static/js/sound.js"></script>
+<script src="/static/js/render.js"></script>
+<script src="/static/js/ui.js"></script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>
